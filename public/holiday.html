@@ -1,0 +1,166 @@
+  <!-- todo: 
+  1. Create a calendar
+  2. Implement booking functionality
+  3. Show the user how many holidays they have left
+  4. Email confirmation of the holiday booking or rejection
+  5. Show other department members holidays on the calendar <- potential functional requirement
+  6. Raise a holiday dispute with manager <- potential functional requirement
+
+-->
+
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script src="js/holiday.js"></script>
+  <title>Holidays</title>
+</head>
+<body>
+  <!---------------------------------- navigation bar ---------------------------------------->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="home.html">Harrisons Saw and tool</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="home.html">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="holiday.html">Holidays</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="machinefault.html">Fault reports</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="management.html">Management area</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!---------------------------------- Holiday planner ---------------------------------------->
+  
+ 
+  <div class="container">
+    <h1>Holiday planner </h1>
+    <iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&bgcolor=%23ffffff&ctz=Europe%2FLondon&hl=en_GB&showCalendars=1&showTabs=1&showPrint=0&showDate=1&showTitle=0&showTz=0&src=ZDQxN2UwZTM4ODdlODQ5YjZlODE2MGUyMmM3NzE3ZWIwOWUzZjQ1OTE4ZDExZDc4NDRhMjc2YTliNTYwZjFlZkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t&color=%23E4C441" position="relative" width="100%" height="50%vh" padding-top="75%" frameborder="0" scrolling="no"></iframe>
+
+    <br>
+    <button id="authorize">Authorize</button>
+    <button id="list-events">List Events</button>
+    <button id="add-holiday">Add Holiday</button>
+    <button id="delete-holiday">Delete Holiday</button>
+    <div id="content"></div>
+  </div>
+
+  <!---------------------------------- Book a holiday ---------------------------------------->
+  <div class="container">
+    <h1 class="my-4">Book a holiday</h1>
+    <p>You have <span id="holidays-remaining">0</span> holidays remaining for this year.</p>
+    <form>
+      <div class="form-group">
+        <label for="noticeTitle">Start date</label>
+        <input type="date" class="form-control" id="start-date" placeholder="">
+      </div>
+      <div class="form-group">
+        <label for="noticeTitle">End date</label>
+        <input type="date" class="form-control" id="end-date" placeholder="">
+      </div>
+      <button type="submit" class="btn btn-primary">Book holiday</button>
+    </form>
+  </div>
+  <!---------------------------------- Cancel a holiday ---------------------------------------->
+  <div class="container">
+    <h1 class="my-4">Cancel a holiday</h1>
+    <div id="failed-holiday-list"class="alert alert-info" role="alert">
+      Failed to load holiday list.
+    </div>
+    <div id="no-holiday-list"class="alert alert-info" role="alert">
+      You have no upcomming holidays.
+    </div>
+    <div id="edit-holiday-list" class="table-responsive">
+      <table class="table">
+        <thead class="thead-dark">
+          <tr>
+            <th scope="col">Start date</th>
+            <th scope="col">End date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Some date</td>
+            <td>Some end date
+          </tr>
+          <tr>
+              <td>Some date</td>
+              <td>Some end date
+              </tr>
+              <tr>
+                <td>Some date</td>
+                <td>Some end date
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!---------------------------------- Edit a holiday ---------------------------------------->
+        <div class="container">
+          <h1 class="my-4">Edit a holiday</h1>
+          <div id="failed-holiday-list"class="alert alert-info" role="alert">
+            Failed to load holiday list.
+          </div>
+          <div id="no-holiday-list"class="alert alert-info" role="alert">
+            You have no upcomming holidays.
+          </div>
+          <div id="edit-holiday-list" class="table-responsive">
+            <table class="table">
+              <thead class="thead-dark">
+                <tr>
+                  <th scope="col">Start date</th>
+                  <th scope="col">End date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Some date</td>
+                  <td>Some end date
+                  </tr>
+                  <tr>
+                    <td>Some date</td>
+                    <td>Some end date
+                    </tr>
+                    <tr>
+                      <td>Some date</td>
+                      <td>Some end date
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+
+
+
+
+
+
+
+
+
+              <!-- Optional JavaScript -->
+              <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+              <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+              <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+              <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+            </body>
+            </html>
