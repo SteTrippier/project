@@ -1,21 +1,36 @@
 function submitNotice(){
     var title = document.getElementById("noticeTitle").value;
     var body = document.getElementById("noticeText").value;
-    console.log ("submitNotice() called");
+    if (title == "" || body == "") {
+        alert("Please fill out all fields");
+        return;
+    }
     addNotice(title, body);
-    //todo: store notices in a database and recall them on load 
+    saveNotice();
 }
 
 async function addNotice(t, b){
     var board = document.getElementById("noticeBoard");
-    board.innerHTML += '<div class="row" id="noticeRow"><div class="col-lg border bg-light rounded m-1 p-1"><h2>' + t + '</h2><p>'+ b +'</p></div>';
-    var submittedNotice = await fetch('/notices', {
-         method: 'POST', 
-         body: JSON.stringify({title: t, description: b})
-         });
-
+    board.innerHTML += '<div class="row" id="noticeRow"><div class="col-lg border bg-light rounded m-1 p-1"><h2>' + t + '</h2><p>'+ b +'</p></div>'; 
 }
 
+async function saveNotice(){
+    var title = document.getElementById("noticeTitle").value;
+    var body = document.getElementById("noticeText").value;
+    var notice = {
+        title: title,
+        description: body
+    }
+    var noticeJSON = JSON.stringify(notice);
+    console.log(noticeJSON);
+    var response = await fetch('/notices', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: noticeJSON
+    });
+}
 
 async function init(){
     var noticeList = await fetch('/notices');
@@ -24,6 +39,5 @@ async function init(){
     for(var i = 0; i < 10; i++){
         addNotice(noticeListJSON[i].title, noticeListJSON[i].description);
     }   
-    
 }
 

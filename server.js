@@ -2,7 +2,9 @@ const express = require("express");
 const app = express();
 const port = 1093;
 const login = require("./public/js/harrisonsLogin.js");
+const bp = require('body-parser')
 const { Pool } = require('pg');
+
 
 // Create a connection pool to the PostgreSQL database
 const pool = new Pool({
@@ -13,19 +15,25 @@ const pool = new Pool({
   port: 5432, // or your database port number
 });
 
+app.use(
+  express.static("public")
+  );
 
+app.use(
+  bp.json()
+  );
 
-app.use(express.static("public"));
+app.use(
+  bp.urlencoded({ extended: true })
+  );
 
-app.listen(port, () => console.log("Servers has started on port: " + port));
+app.listen(
+  port, () => console.log("Servers has started on port: " + port)
+  );
 
 app.get("/", (req, res) => {
   res.status(200).send(__dirname + "/home.html");
 });
-
-
-
-
 
 
 // Define a route to handle GET requests to retrieve the notices
@@ -48,11 +56,10 @@ app.get('/notices', async (req, res) => {
 // Define a route to handle POST requests to add a new notice
 app.post('/notices', async (req, res) => {
   console.log ('POST /notices called');
-  var body = req.body;
   try {
-    console.log(body);
+    console.log(req.body);
     // Extract the notice title and description from the request body
-    const { title, description } = body;
+    const { title, description } = req.body;
 
     // Insert the notice into the noticeboard table
     await pool.query('INSERT INTO notices (title, description) VALUES ($1, $2)', [title, description]);
