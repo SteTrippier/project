@@ -73,5 +73,69 @@ app.post('/notices', async (req, res) => {
   }
 });
 
+app.post("/bookholiday", (req, res) => {
+  console.log(req.body);
+  try{
+    const { startDate, endDate, employeeId } = req.body;
+    await pool.query('INSERT INTO holidays (startdate, enddate, employeeid) VALUES ($1, $2, $3)', [startDate, endDate, employeeId]);
+    res.json({ message: 'Holiday booked successfully' });
+  }
+  catch (error) {
+    console.error('Error booking holiday:', error);
+    res.status(500).json({ error: 'Error booking holiday' });
+  }
+});
 
+app.post("/login", (req, res) => {
+  console.log(req.body);
+  try{
+    const { username, password } = req.body;
+    await pool.query('SELECT * FROM employees WHERE username = $1 AND password = $2', [username, password]);
+    res.json({ message: 'Login successful' });
+  }
+  catch (error) {
+    console.error('Error logging in:', error);
+    res.status(500).json({ error: 'Error logging in' });
+  }
+});
+
+app.post("/register", (req, res) => {
+  console.log(req.body);
+  try{
+    const { 
+      username, 
+      password,
+      firstname,
+      lastname,
+      email,
+      tel,
+      house,
+      postcode,
+      department,
+      workingdays,
+      status
+    } = req.body;
+    await pool.query('INSERT INTO employees (username, password, firstname, lastname, email, tel, house, postcode, department, workingdays, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)', [username, password, firstname, lastname, email, tel, house, postcode, department, workingdays, status]);
+    res.json({ message: 'User registered successfully' });
+  }
+  catch (error) {
+    console.error('Error registering user:', error);
+    res.status(500).json({ error: 'Error registering user' });
+  }
+});
+
+
+
+app.post("/deleteholiday", (req, res) => {
+  console.log(req.body);
+  try{
+    const { holidayID } = req.body;
+    await pool.query('DELETE FROM holidays WHERE holidayid = $1', [holidayID]);
+    res.json({ message: 'Holiday deleted successfully' });
+  }
+  catch (error) {
+    console.error('Error deleting holiday:', error);
+    res.status(500).json({ error: 'Error deleting holiday' });
+  }
+}
 

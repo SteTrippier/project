@@ -36,8 +36,8 @@ async function init(){
     var noticeList = await fetch('/notices');
     var noticeListJSON = await noticeList.json();
     console.log(noticeListJSON);
-    for(var i = 0; i < 10; i++){
+    for (var i = 0; i < noticeListJSON.length; i++){
         addNotice(noticeListJSON[i].title, noticeListJSON[i].description);
-    }   
+    }
 }
 
