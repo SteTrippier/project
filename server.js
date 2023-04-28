@@ -2,34 +2,47 @@ const express = require("express");
 const app = express();
 const port = 1093;
 const login = require("./public/js/harrisonsLogin.js");
-const bp = require('body-parser')
+const bodyParser = require('body-parser')
 const { Pool } = require('pg');
+const session = require("express-session");
+const cookieParser = require("cookie-parser");
+var users = [];
 
 
 // Create a connection pool to the PostgreSQL database
+// Todo repace hardcode values with environment variables
 const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
   database: 'postgres',
   password: 'Stein21244!',
-  port: 5432, // or your database port number
+  port: 5432,
 });
 
-app.use(
-  express.static("public")
-  );
+app.set('views', __dirname + '/views');
+app.use(cookieParser());
+app.use(session({
+  secret: "secret",
+  resave: true,
+  saveUninitialized: true
+}));
+app.use(express.static("public"));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(
-  bp.json()
-  );
 
-app.use(
-  bp.urlencoded({ extended: true })
-  );
 
-app.listen(
-  port, () => console.log("Servers has started on port: " + port)
-  );
+
+app.listen(port, () => console.log("Servers has started on port: " + port));
+
+// Check if the user is logged in before allowing access to the page.
+function checkAuth(req, res, next) {
+  if (req.session.loggedin) {
+    next();
+  } else {
+    res.redirect("/login");
+  }
+}
 
 app.get("/", (req, res) => {
   res.status(200).send(__dirname + "/home.html");
@@ -42,7 +55,7 @@ app.get('/notices', async (req, res) => {
   try {
 
     // Query the database to retrieve all notices from the noticeboard table
-    const result = await pool.query('SELECT * FROM notices');
+    const result = await pool.query('SELECT * FROM notices ORDER BY id DESC');
     // Return the results as JSON
     res.json(result.rows);
 
@@ -73,7 +86,7 @@ app.post('/notices', async (req, res) => {
   }
 });
 
-app.post("/bookholiday", (req, res) => {
+app.post("/bookholiday", async (req, res) => {
   console.log(req.body);
   try{
     const { startDate, endDate, employeeId } = req.body;
@@ -86,7 +99,15 @@ app.post("/bookholiday", (req, res) => {
   }
 });
 
-app.post("/login", (req, res) => {
+//send login page
+app.get('/login', (req, res) => {
+  res.sendFile(__dirname + "/login.html");
+});
+app.get('/signup', (req, res) => {
+  res.sendFile(__dirname + "/signup.html");
+});
+
+app.post("/login", async (req, res) => {
   console.log(req.body);
   try{
     const { username, password } = req.body;
@@ -99,7 +120,7 @@ app.post("/login", (req, res) => {
   }
 });
 
-app.post("/register", (req, res) => {
+app.post("/register", async (req, res) => {
   console.log(req.body);
   try{
     const { 
@@ -124,9 +145,7 @@ app.post("/register", (req, res) => {
   }
 });
 
-
-
-app.post("/deleteholiday", (req, res) => {
+app.post("/deleteholiday", async (req, res) => {
   console.log(req.body);
   try{
     const { holidayID } = req.body;
@@ -138,4 +157,4 @@ app.post("/deleteholiday", (req, res) => {
     res.status(500).json({ error: 'Error deleting holiday' });
   }
 }
-
+);

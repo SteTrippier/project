@@ -24,10 +24,10 @@ async function registerUser() {
         department: department,
         workingdays: workingdays,
         status: status
-    }
-
+    };
     var userJSON = JSON.stringify(user);
     console.log(userJSON);
+
     var response = await fetch('/register', {
         method: 'POST',
         headers: {

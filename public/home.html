@@ -28,7 +28,7 @@
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
           <li class="nav-item active">
-            <a class="nav-link" href="#">Home</a>
+            <a class="nav-link" href="home.html">Home</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="holiday.html">Holidays</a>
@@ -39,42 +39,29 @@
           <li class="nav-item">
             <a class="nav-link" href="management.html">Management area</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" href="login.html">Log out</a>
         </ul>
       </div>
     </nav>
 <!---------------------------------- end of navigation bar ---------------------------------------->
+<!---------------------------------- main section ---------------------------------------->
+    <div class="container" id="noticeboard-container"> 
 
-
-
-    <div class="container"> 
-      <h1 class="my-4">Submit a Notice</h1>
-      <form onsubmit="return false">
-        <div class="form-group">
-          <label for="noticeTitle">Notice Title</label>
-          <input type="text" class="form-control" id="noticeTitle" placeholder="Enter notice title">
-        </div>
-        <div class="form-group">
-          <label for="noticeText">Notice Text</label>
-          <textarea class="form-control" id="noticeText" rows="3" placeholder="Enter notice text"></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary" onclick="submitNotice()">Submit Notice </button>
-      </form>
+    <div id="add-a-notice">
+     
     </div>
 
-    <br /><br />
-
-    <div class="container container-fluid" id="noticeBoard">
-      <div class="row">
-        <h1>Notices</h1>
+      <div class="container container-fluid" id="noticeBoard">
+        <div class="row">
+          <h1>Notices</h1>
       </div>
-
-      
-
-      
     </div>
   </div>
+
+<!---------------------------------- end of main section ---------------------------------------->
 </body>
-<script src="/js/home.js"></script>
+  <script src="/js/home.js"></script>
 </html>
 
 

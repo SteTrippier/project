@@ -36,8 +36,25 @@ async function init(){
     var noticeList = await fetch('/notices');
     var noticeListJSON = await noticeList.json();
     console.log(noticeListJSON);
-    for (var i = 0; i < noticeListJSON.length; i++){
+    for (var i = 0; i < noticeListJSON.length ; i++){
         addNotice(noticeListJSON[i].title, noticeListJSON[i].description);
+    }
+    // TODO change this to check if user is logged in as manager
+    if (true){
+        var snippet = document.getElementById("add-a-notice");
+        snippet.innerHTML = `<h1 class="my-4">Submit a Notice</h1>
+                                <form onsubmit="return false">
+                                <div class="form-group">
+                                    <label for="noticeTitle">Notice Title</label>
+                                    <input type="text" class="form-control" id="noticeTitle" placeholder="Enter notice title">
+                                </div>
+                                <div class="form-group">
+                                    <label for="noticeText">Notice Text</label>
+                                    <textarea class="form-control" id="noticeText" rows="3" placeholder="Enter notice text"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary" id="submitNotice">Submit Notice </button>
+                                </form>
+                            </div><br /><br />`;
     }
 }
 
