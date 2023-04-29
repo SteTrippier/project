@@ -55,7 +55,7 @@ app.get('/notices', async (req, res) => {
   try {
 
     // Query the database to retrieve all notices from the noticeboard table
-    const result = await pool.query('SELECT * FROM notices ORDER BY id DESC');
+    const result = await pool.query('SELECT * FROM notices');
     // Return the results as JSON
     res.json(result.rows);
 
@@ -86,23 +86,13 @@ app.post('/notices', async (req, res) => {
   }
 });
 
-app.post("/bookholiday", async (req, res) => {
-  console.log(req.body);
-  try{
-    const { startDate, endDate, employeeId } = req.body;
-    await pool.query('INSERT INTO holidays (startdate, enddate, employeeid) VALUES ($1, $2, $3)', [startDate, endDate, employeeId]);
-    res.json({ message: 'Holiday booked successfully' });
-  }
-  catch (error) {
-    console.error('Error booking holiday:', error);
-    res.status(500).json({ error: 'Error booking holiday' });
-  }
-});
+
 
 //send login page
 app.get('/login', (req, res) => {
   res.sendFile(__dirname + "/login.html");
 });
+
 app.get('/signup', (req, res) => {
   res.sendFile(__dirname + "/signup.html");
 });
@@ -120,7 +110,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.post("/register", async (req, res) => {
+app.post("/signup", async (req, res) => {
   console.log(req.body);
   try{
     const { 
@@ -133,10 +123,11 @@ app.post("/register", async (req, res) => {
       house,
       postcode,
       department,
+      role,
       workingdays,
       status
     } = req.body;
-    await pool.query('INSERT INTO employees (username, password, firstname, lastname, email, tel, house, postcode, department, workingdays, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)', [username, password, firstname, lastname, email, tel, house, postcode, department, workingdays, status]);
+    await pool.query('INSERT INTO employees (username, password, firstname, lastname, email, tel, house, postcode, department, role, workingdays, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)', [username, password, firstname, lastname, email, tel, house, postcode, department, role, workingdays, status]);
     res.json({ message: 'User registered successfully' });
   }
   catch (error) {
@@ -145,6 +136,10 @@ app.post("/register", async (req, res) => {
   }
 });
 
+
+
+
+//Holiday requests
 app.post("/deleteholiday", async (req, res) => {
   console.log(req.body);
   try{
@@ -158,3 +153,15 @@ app.post("/deleteholiday", async (req, res) => {
   }
 }
 );
+app.post("/bookholiday", async (req, res) => {
+  console.log(req.body);
+  try{
+    const { startDate, endDate, employeeId } = req.body;
+    await pool.query('INSERT INTO holidays (startdate, enddate, employeeid) VALUES ($1, $2, $3)', [startDate, endDate, employeeId]);
+    res.json({ message: 'Holiday booked successfully' });
+  }
+  catch (error) {
+    console.error('Error booking holiday:', error);
+    res.status(500).json({ error: 'Error booking holiday' });
+  }
+});

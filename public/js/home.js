@@ -11,7 +11,8 @@ function submitNotice(){
 
 async function addNotice(t, b){
     var board = document.getElementById("noticeBoard");
-    board.innerHTML += '<div class="row" id="noticeRow"><div class="col-lg border bg-light rounded m-1 p-1"><h2>' + t + '</h2><p>'+ b +'</p></div>'; 
+    var boardinnerHTML = board.innerHTML;
+    board.innerHTML = '<div class="row" id="noticeRow"><div class="col-lg border bg-light rounded m-1 p-3"><h2>' + t + '</h2><p>'+ b +'</p></div></div>' + boardinnerHTML;
 }
 
 async function saveNotice(){
@@ -40,7 +41,7 @@ async function init(){
         addNotice(noticeListJSON[i].title, noticeListJSON[i].description);
     }
     // TODO change this to check if user is logged in as manager
-    if (true){
+    if (false){
         var snippet = document.getElementById("add-a-notice");
         snippet.innerHTML = `<h1 class="my-4">Submit a Notice</h1>
                                 <form onsubmit="return false">
@@ -55,6 +56,7 @@ async function init(){
                                 <button type="submit" class="btn btn-primary" id="submitNotice">Submit Notice </button>
                                 </form>
                             </div><br /><br />`;
+        document.getElementById("submitNotice").addEventListener("click", submitNotice);
     }
 }
 
