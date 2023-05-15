@@ -17,12 +17,28 @@
 
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.7/index.global.min.js'></script>
   <script src="https://apis.google.com/js/api.js"></script>
   <script src="js/holiday.js"></script>
   <title>Holidays</title>
+
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar/index.global.min.js'></script>
+  <script>
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const calendarEl = document.getElementById('calendar')
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        themeSystem: 'bootstrap',
+        initialView: 'dayGridMonth'
+      })
+      calendar.render()
+    })
+
+  </script>
+
+
 </head>
-<body>
+<body onload="holidayInit()">
   <!---------------------------------- navigation bar ---------------------------------------->
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="home.html">Harrisons Saw and tool</a>
@@ -46,26 +62,12 @@
       </ul>
     </div>
   </nav>
-
-  <!---------------------------------- Holiday planner ---------------------------------------->
-  
- 
-  <div class="container">
-    <h1>Holiday planner </h1>
-    <iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=2&bgcolor=%23ffffff&ctz=Europe%2FLondon&hl=en_GB&showCalendars=1&showTabs=1&showPrint=0&showDate=1&showTitle=0&showTz=0&src=ZDQxN2UwZTM4ODdlODQ5YjZlODE2MGUyMmM3NzE3ZWIwOWUzZjQ1OTE4ZDExZDc4NDRhMjc2YTliNTYwZjFlZkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t&color=%23E4C441" position="relative" width="100%" height="50%vh" padding-top="75%" frameborder="0" scrolling="no"></iframe>
-
-    <br>
-    <button id="authorize">Authorize</button>
-    <button id="list-events">List Events</button>
-    <button id="add-holiday">Add Holiday</button>
-    <button id="delete-holiday">Delete Holiday</button>
-    <div id="content"></div>
-  </div>
-
   <!---------------------------------- Book a holiday ---------------------------------------->
   <div class="container">
     <h1 class="my-4">Book a holiday</h1>
+    <div class="container" id="calendar"></div>
     <p>You have <span id="holidays-remaining">0</span> holidays remaining for this year.</p>
+  
     <form>
       <div class="form-group">
         <label for="noticeTitle">Start date</label>
@@ -111,43 +113,42 @@
               </tbody>
             </table>
           </div>
-        </div>
+  </div>
+  <!---------------------------------- Edit a holiday ---------------------------------------->
+  <div class="container">
+    <h1 class="my-4">Edit a holiday</h1>
+    <div id="failed-holiday-list"class="alert alert-info" role="alert">
+      Failed to load holiday list.
+    </div>
+    <div id="no-holiday-list"class="alert alert-info" role="alert">
+      You have no upcomming holidays.
+    </div>
+    <div id="edit-holiday-list" class="table-responsive">
+      <table class="table">
+        <thead class="thead-dark">
+          <tr>
+            <th scope="col">Start date</th>
+            <th scope="col">End date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Some date</td>
+            <td>Some end date
+          </tr>
+          <tr>
+            <td>Some date</td>
+            <td>Some end date
+            </tr>
+          <tr>
+            <td>Some date</td>
+            <td>Some end date
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-        <!---------------------------------- Edit a holiday ---------------------------------------->
-        <div class="container">
-          <h1 class="my-4">Edit a holiday</h1>
-          <div id="failed-holiday-list"class="alert alert-info" role="alert">
-            Failed to load holiday list.
-          </div>
-          <div id="no-holiday-list"class="alert alert-info" role="alert">
-            You have no upcomming holidays.
-          </div>
-          <div id="edit-holiday-list" class="table-responsive">
-            <table class="table">
-              <thead class="thead-dark">
-                <tr>
-                  <th scope="col">Start date</th>
-                  <th scope="col">End date</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Some date</td>
-                  <td>Some end date
-                  </tr>
-                  <tr>
-                    <td>Some date</td>
-                    <td>Some end date
-                    </tr>
-                    <tr>
-                      <td>Some date</td>
-                      <td>Some end date
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-              </div>
+  </div>
 
 
 
