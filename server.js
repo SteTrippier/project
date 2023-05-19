@@ -7,17 +7,8 @@ const bodyParser = require('body-parser')
 const { Pool } = require('pg');
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
-var users = [];
-const tls = require('tls');
-// Create a custom TLS configuration to trust self-signed certificates
-const tlsConfig = {
-  rejectUnauthorized: false // Set to false to trust self-signed certificates
-};
-// Set the NODE_TLS_REJECT_UNAUTHORIZED environment variable to "0"
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-// Create a connection pool to the PostgreSQL database
-// Todo repace hardcode values with environment variables
+// Create a connection to the database
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -26,7 +17,6 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-app.set('views', __dirname + '/views');
 app.use(cookieParser());
 app.use(session({
   secret: "secret",
@@ -36,58 +26,73 @@ app.use(session({
 app.use(express.static("public"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.listen(port, () => console.log("Servers has started on port: " + process.env.WEB_LISTEN_PORT));
+const fs = require('fs');
+// Load self-signed certificate
+const ca = fs.readFileSync('server.crt');
 
 // auto email confirmation
 var nodemailer = require('nodemailer');
+const { start } = require('repl');
 var senderEmail = process.env.EMAIL_ADD;
 var senderPass = process.env.EMAIL_PASS;
 var receiverEmail = process.env.TEST_EMAIL;
 
-var emailTitle ={
-    success: "Holiday booking confirmed!",
-    fail: "Holiday booking failed"
-};
-var emailBody = {
-    success: "Your holiday has been successfully booked for startDate until endDate",
-    fail: "Your holiday booking for startDate until endDate could not be processed due to reason"
-}
-
+// create reusable transporter object using the default SMTP transport
 var transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.zoho.eu',
+  port: 465,
+  secure: true, //ssl
   auth: {
-    user: senderEmail,
-    pass: senderPass
-  },
-  tls: tlsConfig
+      user:senderEmail,
+      pass:senderPass
+  }
 });
 
+// setup email data
 var mailSuccessOptions = {
   from: senderEmail,
   to: receiverEmail,
-  subject: emailTitle.success,
-  text: emailBody.success
+  subject: "Holiday booking confirmed!",
+  text: "Your holiday has been successfully booked, enjoy your holiday! Please do not reply to this automated email.",
+  ca: ca
 }
-
 var mailFailOptions = {
     from: senderEmail,
     to: receiverEmail,
-    subject: emailTitle.fail,
-    text: emailBody.fail
+    subject: "Holiday booking failed",
+    text:"Your holiday booking could not be processed due to a booking clash with another employee. Please do not reply to this automated email.",
+    ca: ca
 }
 
-function holidayFailEmail(){
-  console.log("holidayFailEmail");
+// send email on failure of booking
+function holidayFailEmail(start, end, reason){
+  mailFailOptions.text = "Your holiday booking for " + start + " until "+ end + " could not be processed due to "+ reason +". Please do not reply to this automated email.";
+  console.log("mailFailOptions");
   transporter.sendMail(mailFailOptions, function(error, info){
     if (error) {
-      console.log(error);
+      console.log("Holiday fail email error:" + error);
     } else {
       console.log('Email sent: ' + info.response);
     }
   });
 } 
+// send email on success of booking
+function holidaySuccessEmail(start , end){
+  mailSuccessOptions.text = "Your holiday booking for " + start + " until "+ end + " has been successfully booked, enjoy your holiday! Please do not reply to this automated email.";
+  console.log("mailSuccessOptions");
+  transporter.sendMail(mailSuccessOptions, function(error, info){
+    if (error) {
+      console.log("Holiday success email error:" + error);
+    } else {
+      console.log('Email sent: ' + info.response);
+    }
+  });
+}
 
 
-app.listen(port, () => console.log("Servers has started on port: " + process.env.WEB_LISTEN_PORT));
+
+
 
 // Check if the user is logged in before allowing access to the page.
 function checkAuth(req, res, next) {
@@ -198,11 +203,28 @@ app.post("/signup", async (req, res) => {
 
 
 
-//Holiday requests
+
 app.post("/deleteholiday", async (req, res) => {
   console.log(req.body);
+
+  // Validate that the request body contains 'holidayID'
+  if (!req.body.holidayID) {
+    res.status(400).json({ error: 'Missing holidayID in request body' });
+    return;
+  }
+
+  const { holidayID } = req.body;
+
   try{
-    const { holidayID } = req.body;
+    // First, check if a row with the given holidayID exists in the database
+    const result = await pool.query('SELECT * FROM holidays WHERE holidayid = $1', [holidayID]);
+    
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: 'Holiday not found' });
+      return;
+    }
+    
+    // If it exists, proceed with the deletion
     await pool.query('DELETE FROM holidays WHERE holidayid = $1', [holidayID]);
     res.json({ message: 'Holiday deleted successfully' });
   }
@@ -212,49 +234,45 @@ app.post("/deleteholiday", async (req, res) => {
   }
 });
 
+
 app.post("/bookholiday", async (req, res) => {
-  
+  let { startDate, endDate, employeeId, comment } = req.body;
+  startDate = new Date(startDate).toLocaleDateString('en-GB');
+  endDate = new Date(endDate).toLocaleDateString('en-GB');
   console.log(req.body);
   if (req.body.stat == "success"){
     try{
-      const { startDate, endDate, employeeId, comment } = req.body;
       await pool.query('INSERT INTO holidays (start_date, end_date, employee_id, comment) VALUES ($1, $2, $3, $4)', [startDate, endDate, employeeId, comment]);
       console.log("success, you booked the holiday.")
-      holidaySuccessEmail();
+      holidaySuccessEmail(startDate, endDate);
       res.json({ message: 'Holiday booked' });
     }
     catch (error) {
-      holidayFailEmail();
+      holidayFailEmail(startDate, endDate, "an error occured on the server, please try again later");
       console.error('Error booking holiday:', error);
       res.status(500).json({ error: 'Error booking holiday' });
     }
   }
   else if (req.body.stat == "fail"){
+    holidayFailEmail(startDate, endDate, "booking clash");
     console.log("failed to book the holiday.")
-    holidayFailEmail();
   }
   else{
     console.log("Something else went wrong.")
   }
 });
 
-function holidaySuccessEmail(){
-    console.log("holidaySuccessEmail");
-    transporter.sendMail(mailSuccessOptions, function(error, info){
-      if (error) {
-        console.log(error);
-      } else {
-        console.log('Email sent: ' + info.response);
-      }
-    });
-}
-
 
 app.get("/getholidays", async (req, res) => {
-
-  
   try{
     const result = await pool.query('SELECT * FROM holidays');
+    
+    // If there are no holidays in the database, send a meaningful message
+    if (result.rowCount === 0) {
+      res.json({ message: 'No holidays found' });
+      return;
+    }
+    
     console.log(result.rows);
     res.json(result.rows);
   }
