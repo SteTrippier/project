@@ -68,14 +68,16 @@
     <div class="container" id="calendar"></div>
     <p>You have <span id="holidays-remaining">0</span> holidays remaining for this year.</p>
   
-    <form>
+    <form id="holidayForm">
       <div class="form-group">
         <label for="noticeTitle">Start date</label>
         <input type="date" class="form-control" id="start-date" placeholder="">
-      </div>
-      <div class="form-group">
         <label for="noticeTitle">End date</label>
         <input type="date" class="form-control" id="end-date" placeholder="">
+      </div>
+      <div class="form-group">
+        <label for="comment">Comment (Optional): </label>
+        <input type="text" class="form-control" id="comment" placeholder="Enter comment here...">
       </div>
       <button type="submit" class="btn btn-primary">Book holiday</button>
     </form>

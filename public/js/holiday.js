@@ -1,5 +1,12 @@
 // test function. called on page load
 function holidayInit(){
+  document.getElementById("holidayForm").addEventListener("submit", function(event){
+    event.preventDefault();
+    var startDate = document.getElementById("start-date").value;
+    var endDate = document.getElementById("end-date").value;
+    var comment = document.getElementById("comment").value;
+    bookHoliday(startDate, endDate, comment);
+  });
 }
 
 // Gets all holidays from the database
@@ -38,12 +45,10 @@ async function isHolidayOverlap(startDatei, endDatei) {
 }
 
 // checks if the requested holiday is valid
-async function bookHoliday (startDate, endDate){
-  
-  //todo: get comment from form
+async function bookHoliday (startDate, endDate, comment){
+
   //todo: get employee id from session
   employeeId = 0001;
-  comment = "test comment";
 
   if (await isHolidayOverlap(startDate, endDate)) {
     //alert("Holiday overlaps with another holiday");

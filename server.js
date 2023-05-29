@@ -1,12 +1,21 @@
 require('dotenv').config({ path: __dirname + '/projectVariables.env' })
 const express = require("express");
-const app = express();
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
 const port = process.env.WEB_LISTEN_PORT || 1093;
 const login = require("./public/js/harrisonsLogin.js");
 const bodyParser = require('body-parser')
 const { Pool } = require('pg');
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
+const app = express();
+const User = require('./models/user');
+const bcrypt = require('bcrypt');
+app.use(session({ secret: 'secretKey', resave: false, saveUninitialized: false }));
+app.use(passport.initialize());
+app.use(passport.session());
+
+
 
 // Create a connection to the database
 const pool = new Pool({
@@ -103,6 +112,35 @@ function checkAuth(req, res, next) {
   }
 }
 
+
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+    User.findOne({ username: username }, function (err, user) {
+      if (err) { 
+        return done(err); // If there's an error, pass it to `done`
+      }
+      if (!user) {
+        return done(null, false); // If no user was found, call `done` with `false`
+      }
+      if (!user.verifyPassword(password)) {
+        return done(null, false); // If the password is wrong, call `done` with `false`
+      }
+      return done(null, user); // If everything's okay, call `done` with the authenticated user
+    });
+  }
+));
+
+async function hashPassword(password) {
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
+}
+
+
+
+
+
+
+
 app.get("/", (req, res) => {
   res.status(200).send(__dirname + "/home.html");
 });
@@ -161,21 +199,29 @@ app.get('/signup', (req, res) => {
   res.sendFile(__dirname + "/signup.html");
 });
 
-app.post("/login", async (req, res) => {
-  console.log(req.body);
-  try{
-    const { username, password } = req.body;
-    await pool.query('SELECT * FROM employees WHERE username = $1 AND password = $2', [username, password]);
-    res.json({ message: 'Login successful' });
-  }
-  catch (error) {
-    console.error('Error logging in:', error);
-    res.status(500).json({ error: 'Error logging in' });
-  }
+
+
+
+
+
+
+app.post("/login", passport.authenticate('local'), async (req, res) => {
+  
+  res.redirect("/home");
 });
 
+
+
+
+
+
+
+
+
+
+
+
 app.post("/signup", async (req, res) => {
-  console.log(req.body);
   try{
     const { 
       username, 
@@ -191,8 +237,16 @@ app.post("/signup", async (req, res) => {
       workingdays,
       status
     } = req.body;
-    await pool.query('INSERT INTO employees (username, password, firstname, lastname, email, tel, house, postcode, department, role, workingdays, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)', [username, password, firstname, lastname, email, tel, house, postcode, department, role, workingdays, status]);
-    res.json({ message: 'User registered successfully' });
+
+    tempUser = new User(null, username, hashPassword(password), role);
+    saved = await tempUser.save();
+    if(saved){
+      await pool.query('INSERT INTO employees (username, password, firstname, lastname, email, tel, house, postcode, department, role, workingdays, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)', [username, password, firstname, lastname, email, tel, house, postcode, department, role, workingdays, status]);
+      res.json({ message: 'User registered successfully' });
+    }
+    else{
+      res.json({ message: 'User registration failed' });
+    }
   }
   catch (error) {
     console.error('Error registering user:', error);

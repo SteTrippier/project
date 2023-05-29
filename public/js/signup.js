@@ -6,7 +6,8 @@ async function signup() {
     var email = document.getElementsByName("email")[0].value;
     var houseno = document.getElementsByName("houseno")[0].value;
     var postcode = document.getElementsByName("postcode")[0].value;
-    var department = document.getElementsByName("Department")[0].value;
+    var department = document.getElementsByName("department")[0].value;
+    var role = document.getElementById("role").value
     var mon = document.getElementById("mon").checked;
     var tue = document.getElementById("tue").checked;
     var wed = document.getElementById("wed").checked;
@@ -31,7 +32,7 @@ async function signup() {
     if (fri) {workingdays = workingdays.substring(0, 4) + "1";}
 
     //check if all fields are filled
-    if (empId == "" || password == "" || name == "" || tel == "" || email == "" || houseno == "" || postcode == "" || Department == "") {
+    if (empId == "" || password == "" || name == "" || tel == "" || email == "" || houseno == "" || postcode == "" || department == "") {
         alert("Please fill in all fields");
         return;
     }
@@ -45,7 +46,7 @@ async function signup() {
       tel: tel,
       house: houseno,
       postcode: postcode,
-      role: "manager",                      //TODO <<<<<<<<<<< change this later <<<<<<<<<<<<<
+      role: role,                      
       department: department,
       workingdays: workingdays,
       status: "working"
@@ -54,6 +55,7 @@ async function signup() {
     
     var signupJSON = JSON.stringify(employee);
     console.log(signupJSON);
+    
     var response = await fetch('/signup', {
         method: 'POST',
         headers: {
