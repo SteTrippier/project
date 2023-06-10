@@ -14,13 +14,13 @@
 		<title>Login</title>
 	</head>
 
-	<body>
+	<body onload="onLoad()">
 		<div class="login-container">
 			<h1>LOGIN</h1>
 			<form onsubmit="return false">
 
 				<div class="form-group">
-					<label for="usr">Employee ID:</label>
+					<label for="usr">Username:</label>
 					<input type="text" class="form-control" id="usr" name="empId">
 				</div>
 
@@ -29,27 +29,11 @@
 					<input type="password" class="form-control" id="pwd" name="password" >
 				</div>
 				<button class="btn btn-primary" type="submit" onclick="checkLogin()">Submit</button>
+				<button class="btn btn-primary" onclick="location.href='signup.html';">Sign up</button>
 			
 			</form>
 		</div>
+		<script type="text/javascript" src="js/login.js"></script>
 	</body>
 
-	<script>
-		function checkLogin() {
-			var empId = document.getElementById("usr").value;
-			var password = document.getElementById("pwd").value;
-			if (empId == "" || password == "") {
-				alert("Login Failed please enter a password and employee ID");
-			}
-			else{
-				//TODO: Check login credentials and delete this
-				if (
-					empId == "1234" &&
-					password == "1234"
-				){
-					location.replace("home.html");
-				}
-			}
-		}
-	</script> 
 </html>

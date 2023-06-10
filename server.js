@@ -15,8 +15,6 @@ app.use(session({ secret: 'secretKey', resave: false, saveUninitialized: false }
 app.use(passport.initialize());
 app.use(passport.session());
 
-
-
 // Create a connection to the database
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -114,11 +112,15 @@ function checkAuth(req, res, next) {
 
 
 passport.use(new LocalStrategy(
-  function(username, password, done) {
-    User.findOne({ username: username }, function (err, user) {
-      if (err) { 
-        return done(err); // If there's an error, pass it to `done`
-      }
+  async function(username, password, done) {
+    try {
+      console.log("username: " + username);
+      console.log("password: " + password);
+
+      const user = await User.findOne({ username: username });
+      console.log("LocalStrategy called");
+      console.log("user: " + user);
+      
       if (!user) {
         return done(null, false); // If no user was found, call `done` with `false`
       }
@@ -126,13 +128,17 @@ passport.use(new LocalStrategy(
         return done(null, false); // If the password is wrong, call `done` with `false`
       }
       return done(null, user); // If everything's okay, call `done` with the authenticated user
-    });
+    } catch (err) {
+      return done(err); // If there's an error, pass it to `done`
+    }
   }
 ));
+
 
 async function hashPassword(password) {
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
+  return hashedPassword;
 }
 
 
@@ -140,8 +146,11 @@ async function hashPassword(password) {
 
 
 
-
 app.get("/", (req, res) => {
+  res.status(200).send(__dirname + "/public/home.html");
+});
+
+app.get("/home.html", checkAuth, (req, res) => {
   res.status(200).send(__dirname + "/home.html");
 });
 
@@ -189,25 +198,70 @@ app.post('/notices', async (req, res) => {
 
 
 
+// remove user API
+app.post("/removeuser", async (req, res) => {
+  // delete user from the database
+  // end any sessions for that user
+  // send email to user to confirm deletion
+  // send email to admin to confirm deletion
+  console.log("removeUser called");
+  try {
+    const { username } = req.body;
+    console.log(username);
+    // First, check if a row with the given username exists in the database
+    const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // If it exists, proceed with the deletion
+    await pool.query('DELETE FROM users WHERE username = $1', [username]);
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Error deleting user' });
+  }
+});
+
+
+
+
+
+
+
+
+
+
 // LOG IN AND SIGN UP API
 //send login page
-app.get('/login', (req, res) => {
-  res.sendFile(__dirname + "/login.html");
+app.get("/login", (req, res) => {
+  res.sendFile(__dirname + "/public/index.html");
 });
 
 app.get('/signup', (req, res) => {
-  res.sendFile(__dirname + "/signup.html");
+  res.sendFile(__dirname + "/public/signup.html");
 });
 
 
+app.post('/login', (req, res, next) => {
+  passport.authenticate('local', (err, user, info) => {
+   
+    if (err) {
+      // Handle any errors that occur during authentication
+      return next(err);
+    }
 
+    if (!user) {
+      console.log("user not found");
+      // Authentication failed, send a JSON response with an error message
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
 
-
-
-
-app.post("/login", passport.authenticate('local'), async (req, res) => {
-  
-  res.redirect("/home");
+    // Authentication succeeded, redirect to the home page
+    return res.redirect('/home.html');
+  })(req, res, next);
 });
 
 

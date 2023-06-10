@@ -13,6 +13,7 @@
 		<link rel="stylesheet" type="text/css" href="css/login.css" />
         <link rel="stylesheet" type="text/css" href="css/signup.css" />
         <script src="/js/signup.js"></script>
+        
 		<title>Sign up</title>
 	</head>
 
@@ -31,17 +32,25 @@
                     </div>
                 </div>
     
+
                 <div class="form-row">
-                    <div class="form-group col-md-6">
-                        <label for="name">Name:</label>
-                        <input type="text" class="form-control" id="name" name="name">
+                    <div class="form-group col-md-3">
+                        <label for="firstname">First name:</label>
+                        <input type="text" class="form-control" id="firstname" name="firstname">
                     </div>
+
+                    <div class="form-group col-md-3">
+                        <label for="lastname">Last name:</label>
+                        <input type="text" class="form-control" id="lastname" name="lastname">
+                    </div>
+
                     <div class="form-group col-md-6">
                         <label for="tel">Telephone:</label>
                         <input type="text" class="form-control" id="tel" name="tel">
                     </div>
                 </div>
     
+
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label for="email">Email:</label>
@@ -57,11 +66,7 @@
                     </div>
                 </div>
     
-                <div class="form-group">
-                    <label for="department">department:</label>
-                    <input type="text" class="form-control" id="department" name="department">
-                </div>
-    
+
                 <div class="form-group">
                     <label for="Workingdays">Working days:</label>
                     <div class="form-row pl-4">
@@ -91,39 +96,29 @@
                 
                 <div class="form-group">
                     <label for="role" class="mr-2">Role:</label>
-                    <select id="role" class="form-control">
-                        <option value="saw doctor">Saw doctor</option>
-                        <option value="manager">Manager</option>
-                        <option value="engineer">Engineer</option>
-                        <option value="office">Office</option>
-                        <option value="sales">Sales</option>
-                        <option value="driver">Driver</option>
+                    <select id="role" class="form-control" onchange="showHide()">
+                        <option value="Saw doctor">Saw doctor</option>
+                        <option value="Office">Office</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Engineer">Engineer</option>
+                        <option value="Sales">Sales</option>
+                        <option value="Driver">Driver</option>
                     </select>
                 </div>
                 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                <div class="form-group" id="department-group">
+                    <label for="department">Department:</label>
+                    <select id="department"  class="form-control" name="department">
+                        <option value="SHSS">SHSS</option>
+                        <option value="TCT">TCT</option>
+                        <option value="Bandsaw">Bandsaw</option>
+                        <option value="Despatch">Despatch</option>
+                    </select>
+                </div>
         
-                <button class="btn btn-primary" type="submit" onclick="signup()">Submit</button>
+
+                <button class="btn btn-primary" onclick="signup()">Submit</button>
                 <input class="btn btn-primary" type="reset">
             </form>
         </div>
@@ -132,10 +127,8 @@
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script>
         
-    
-    
-    
+        
+        
     </body>
-
 	
 </html>

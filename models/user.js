@@ -1,5 +1,4 @@
 // models/user.js
-
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 require('dotenv').config({ path: __dirname + '../projectVariables.env' })
@@ -23,12 +22,17 @@ class User {
   }
 
   static async findOne(username) {
+    console.log(username.username);
     try {
-      const res = await pool.query('SELECT * FROM users WHERE username = ' + username);
-      if(res.rows.length === 0) {
+      const res = await pool.query('SELECT * FROM users WHERE username = $1', [username.username]);
+      console.log(res.rows[0]);
+      if(res.rows[0] == undefined) {
+        console.log(res.rows[0] + " is undefined")
         return null;
       } else {
+        console.log(res.rows[0] + " is defined");
         const { id, username, password_hash, role } = res.rows[0];
+        console.log(id, username, password_hash, role);
         return new User(id, username, password_hash, role);
       }
     } catch (err) {
@@ -49,9 +53,11 @@ class User {
     }
     
 
-  async verifyPassword(password) {
-    return await bcrypt.compare(password, this.password_hash);
-  }
+    async verifyPassword(password) {
+      let result = await bcrypt.compare(password, this.password_hash);
+      console.log(result);
+      return result;
+    }
 }
 
 module.exports = User;
