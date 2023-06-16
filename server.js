@@ -111,6 +111,22 @@ function checkAuth(req, res, next) {
 }
 
 
+//get a list of all employees first name and last name
+app.get("/getAllEmployees", async (req, res) => {
+  try{
+    const query = 'SELECT firstname, lastname, username from employees';
+    const result = await pool.query(query);
+  }
+  catch (error) {
+    console.error('Error retrieving employees:', error);
+    res.status(500).json({ error: 'Error retrieving employees' });
+  }
+});
+
+
+
+
+
 passport.use(new LocalStrategy(
   async function(username, password, done) {
     try {
@@ -155,6 +171,17 @@ app.get("/home.html", checkAuth, (req, res) => {
 });
 
 
+app.get('/users', async (req, res) => {
+  try {
+    const query = 'SELECT id, username, role FROM users';
+    const result = await pool.query(query);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error retrieving users:', error);
+    res.status(500).json({ error: 'Error retrieving users' });
+  }
+});
 
 
 
@@ -212,13 +239,16 @@ app.post("/removeuser", async (req, res) => {
     const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
 
     if (result.rowCount === 0) {
+      console.log("no user found");
       res.status(404).json({ error: 'User not found' });
       return;
     }
-
+    else{
     // If it exists, proceed with the deletion
-    await pool.query('DELETE FROM users WHERE username = $1', [username]);
+    let deleted = await pool.query('DELETE FROM users WHERE username = $1', [username]);
+    console.log("user deleted");
     res.json({ message: 'User deleted successfully' });
+  }
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({ error: 'Error deleting user' });

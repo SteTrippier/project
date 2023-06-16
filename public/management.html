@@ -17,8 +17,18 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
     <title>Management area</title>
+    <style> 
+      label {
+        margin-top: 20px;
+      }
+      .my-radio {
+        margin-top: 0px;
+      }
+
+
+    </style>
   </head>
-  <body>
+  <body onload="managementLoad()">
 <!---------------------------------- navigation bar ---------------------------------------->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <a class="navbar-brand" href="home.html">Harrisons Saw and tool</a>
@@ -54,17 +64,116 @@ Adjust holiday allowance
 Add/remove users
 --->
 
-
+<br>
 <div class="container">
-  <h1>Remove users access:</h1>
-  <form>
-    <div class="form-group">
-      <label for="userToRemove">Username:</label>
-      <input type="text" class="form-control" id="userToRemove" name="userToRemove">
+  <h1>Management area</h1>
+  <div id="accordion">
+    <div class="card">
+      <div class="card-header" id="removeUsersHeader">
+        <h5 class="mb-0">
+          <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+            Remove users
+          </button>
+        </h5>
+      </div>
+
+      <div id="collapseOne" class="collapse" aria-labelledby="removeUsersHeader" data-parent="#accordion">
+        <div class="card-body">
+          <div class="container">
+            <h1>User list:</h1>
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Username</th>
+                  <th>Role</th>
+                </tr>
+              </thead>
+              <tbody id="userList">
+              </tbody>
+              </table>
+          </div>
+          
+          <br>
+          <div class="container">
+            <form>
+              <div class="form-group row">
+                <label for="userToRemove" class="col-sm-2 col-form-label ">Username:</label>
+                <div class="col-sm-7">
+                  <input type="text" class="form-control" id="userToRemove" name="userToRemove" placeholder="Username to be removed">
+                </div>
+                <div class="col-sm-2">
+                  <button class="btn btn-primary" onclick="removeUser()">Remove user</button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+
+        </div>
+      </div>
     </div>
-    <button class="btn btn-primary" onclick="removeUser()">Remove user</button>
-  </form>
-</div>
+
+
+
+
+
+    <div class="card">
+      <div class="card-header" id="overrideHoliday">
+        <h5 class="mb-0">
+          <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+            Override holiday
+          </button>
+        </h5>
+      </div>
+
+      <div id="collapseTwo" class="collapse" aria-labelledby="addHolidayHeader" data-parent="#accordion">
+        <div class="card-body">
+          <div class="container">
+            <div class="p-3 mb-2 bg-warning text-dark">Warning: Use of this function overrides automatic validation of holidays.</div>
+            <h1>Book holiday</h1>
+
+            <form id="holidayFormOverride">
+              <div class="form-group">
+
+                <label for="username-override">Username:</label>
+                <select class="custom-select" id="employee-list-management">
+                  <option disable selected hidden value="">select user</option>
+                  <option value="1">One</option>
+                  <option value="2">Two</option>
+                  <option value="3">Three</option>
+                </select>
+
+                <label for="start-date-override">Start date:</label>
+                <input type="date" class="form-control" id="start-date-override" name="start-date-override" placeholder="">
+
+                <label for="end-date-override">End date:</label>
+                <input type="date" class="form-control" id="end-date-override" name="end-date-override" placeholder="">
+
+                <label for="comment">Comment (Optional): </label>
+                <input type="text" class="form-control" id="comment" placeholder="Enter comment here...">
+
+          
+                <label style="margin-right: 20px;">Update holiday allowance?:</label>
+                  <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="update-allowance-yes" id="update-allowance-yes" value="yes" checked>
+                      <label class="form-check-label my-radio" for="update-allowance-yes">Yes</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="update-allowance-no" id="update-allowance-no" value="no">
+                      <label class="form-check-label my-radio" for="update-allowance-no">No</label>
+                  </div>
+                  <div class="col-sm-2">
+                    <button class="btn btn-primary" onclick="overrideBookHoliday()">Remove user</button>
+                  </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+  </div>
+
+
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
