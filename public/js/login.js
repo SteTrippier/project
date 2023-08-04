@@ -1,11 +1,11 @@
-
 function checkLogin() {
     var empId = document.getElementById("usr").value;
     var password = document.getElementById("pwd").value;
     
     if (empId == "" || password == "") {
       alert("Login Failed, please enter an employee ID and password.");
-    } else {
+    } 
+    else {
       var user = {
         username: empId,
         password: password
@@ -14,6 +14,7 @@ function checkLogin() {
       console.log(userJSON);
       
       (async function() {
+        console.log("Attempting to login...");
         try {
           var response = await fetch('/login', {
             method: 'POST',
@@ -23,15 +24,16 @@ function checkLogin() {
             body: userJSON
           });
           
-          // Process the response as needed
-          // For example, you can check the response status and redirect the user if successful
           if (response.ok) {
-            console.log(response);
-            window.location.href = "/home.html";
-          } else {
-            alert("Login Failed, please check your credentials and try again.");
+            const data = await response.json();
+            window.location.href = data.redirect;
           }
-        } catch (error) {
+          
+          else {
+            alert("Login Failed, please check your username and password and try again.");
+          }
+        } 
+        catch (error) {
           console.error("An error occurred during login:", error);
           alert("An error occurred during login. Please try again later.");
         }

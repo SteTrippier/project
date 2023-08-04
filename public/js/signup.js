@@ -28,15 +28,17 @@ async function signup() {
     if (fri) {workingdays = workingdays.substring(0, 4) + "1";}
 
     //check if all fields are filled
+
+    if (department == null || department == "") {
+        department = role;
+    }
+
     if (empId == "" || password == "" || firstname == "" || lastname == "" || tel == "" || email == "" || houseno == "" || postcode == "" || department == "") {
         alert("Please fill in all fields");
         console.log(empId, password, firstname, lastname, tel, email, houseno, postcode, department);
         return;
     }
-    if (department == null || department == "") {
-        department = role;
-    }
-
+    
     var employee = {
       username: empId,
       password: password,

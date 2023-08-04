@@ -40,8 +40,11 @@ async function init(){
     for (var i = 0; i < noticeListJSON.length ; i++){
         addNotice(noticeListJSON[i].title, noticeListJSON[i].description);
     }
+
+    var isManager = await checkUserStatus();
+
     // TODO change this to check if user is logged in as manager
-    if (false){
+    if (isManager == true){
         var snippet = document.getElementById("add-a-notice");
         snippet.innerHTML = `<h1 class="my-4">Submit a Notice</h1>
                                 <form onsubmit="return false">
@@ -60,3 +63,24 @@ async function init(){
     }
 }
 
+
+async function checkUserStatus() {
+    try {
+      const response = await fetch('/api/user_role');
+      const data = await response.json();
+      console.log(data);
+
+      if (data.role.toLowerCase() == "manager") {
+        console.log('User is logged in as manager');
+        return true;
+      } 
+      else {
+        console.log('User is: ' + data.role + ' not manager');
+        return false;
+      }
+    } 
+    catch (error) {
+      console.error('An error occurred:', error);
+      return false;
+    }
+  }
