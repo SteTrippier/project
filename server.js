@@ -23,14 +23,18 @@ const pool = new Pool({
 });
 
 app.use(cookieParser());
-
+app.use((req, res, next) => {
+  //console.log("Cookies:", req.cookies); // This will log the cookies in the server console
+  next();
+});
 app.use(
   session({
-    secret: "secretKey",
+    secret: process.env.SESSION_KEY, // A random string used to sign the session ID cookie
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: false,
+      secure: false, // Set to true if you're using HTTPS
+      maxAge: 3600000, // Session expiration time (in milliseconds)
     },
   })
 );
@@ -64,6 +68,9 @@ var transporter = nodemailer.createTransport({
     user: senderEmail,
     pass: senderPass,
   },
+  tls: {
+    rejectUnauthorized: false,
+  }
 });
 
 // setup email data
@@ -121,18 +128,22 @@ function holidaySuccessEmail(start, end) {
 
 // Check if the user is logged in before allowing access to the page.
 function checkAuth(req, res, next) {
-  console.log("checkAuth called");
   if (req.session.loggedin) {
+    console.log("checkAuth passed");
     next();
   } else {
-    res.redirect("/login");
+    console.log("checkAuth failed");
+    return res.redirect("/index.html");
   }
 }
 
 // Check if the user is logged in as a manager before allowing access to the page.
 function checkManager(req, res, next) {
   console.log("checkManager called");
-  if (req.session.loggedin && req.session.role == "manager") {
+  if (
+    req.session.loggedin &&
+    (req.session.role == "manager" || req.session.role == "Manager")
+  ) {
     next();
   } else {
     console.log(
@@ -361,6 +372,12 @@ app.post("/login", (req, res, next) => {
         return next(err);
       }
       // Authentication succeeded, return a JSON response with the URL to redirect to
+      console.log("login post api : user found " + user.username);
+      req.session.loggedin = true;
+      req.session.username = user.username;
+      req.session.role = user.role;
+      req.session.userid = user.id;
+
       return res.json({ redirect: "/home.html" });
     });
   })(req, res, next);
@@ -526,23 +543,20 @@ app.post("/deleteholiday", checkAuth, async (req, res) => {
     return;
   }
 
-  const { holidayID } = req.body;
-
+  var { holidayID } = req.body;
+  console.log("holidayID:", holidayID);
   try {
     // First, check if a row with the given holidayID exists in the database
-    const result = await pool.query(
-      "SELECT * FROM holidays WHERE holidayid = $1",
-      [holidayID]
-    );
-
+    const result = await pool.query("SELECT number_of_days_used FROM holidays WHERE id = $1", [holidayID]);
+    console.log("result:", result);
     if (result.rowCount === 0) {
       res.status(404).json({ error: "Holiday not found" });
       return;
     }
-
     // If it exists, proceed with the deletion
-    await pool.query("DELETE FROM holidays WHERE holidayid = $1", [holidayID]);
+    await pool.query("DELETE FROM holidays WHERE id = $1", [holidayID]);
     res.json({ message: "Holiday deleted successfully" });
+    await pool.query("Update employees SET annual_leave_remaining = annual_leave_remaining + $1 WHERE username = $2", [result.rows[0].number_of_days_used, req.session.username]);
   } catch (error) {
     console.error("Error deleting holiday:", error);
     res.status(500).json({ error: "Error deleting holiday" });
@@ -550,46 +564,74 @@ app.post("/deleteholiday", checkAuth, async (req, res) => {
 });
 
 app.post("/bookholiday", checkAuth, async (req, res) => {
-  let { startDate, endDate, employeeId, comment } = req.body;
-  startDate = new Date(startDate).toLocaleDateString("en-GB");
-  endDate = new Date(endDate).toLocaleDateString("en-GB");
-  console.log(req.body);
-  if (req.body.stat == "success") {
-    try {
-      await pool.query(
-        "INSERT INTO holidays (start_date, end_date, employee_id, comment) VALUES ($1, $2, $3, $4)",
-        [startDate, endDate, employeeId, comment]
-      );
-      console.log("success, you booked the holiday.");
-      holidaySuccessEmail(startDate, endDate);
-      res.json({ message: "Holiday booked" });
-    } catch (error) {
-      holidayFailEmail(
-        startDate,
-        endDate,
-        "an error occured on the server, please try again later"
-      );
-      console.error("Error booking holiday:", error);
-      res.status(500).json({ error: "Error booking holiday" });
+  try {
+    let { startDate, endDate, employeeId, comment, numOfDays } = req.body;
+    startDate = new Date(startDate).toLocaleDateString("en-GB");
+    endDate = new Date(endDate).toLocaleDateString("en-GB");
+    console.log("Request Body:", req.body);
+    employeeId = employeeId.employee_id;
+    if (req.body.stat === "success") {
+      try {
+        await pool.query(
+          "INSERT INTO holidays (start_date, end_date, employee_id, comment, number_of_days_used) VALUES ($1, $2, $3, $4 , $5)",
+          [startDate, endDate, employeeId, comment, numOfDays]
+        );
+        console.log("Success, you booked the holiday.");
+        holidaySuccessEmail(startDate, endDate);
+        res.json({ message: "Holiday booked" });
+      } catch (error) {
+        holidayFailEmail(
+          startDate,
+          endDate,
+          "An error occurred on the server, please try again later."
+        );
+        console.error("Error booking holiday:", error);
+        res.status(500).json({ error: "Error booking holiday" });
+      }
+    } else if (req.body.stat === "fail") {
+      holidayFailEmail(startDate, endDate, "Booking clash");
+      console.log("Failed to book the holiday.");
+    } else {
+      console.log("Something else went wrong.");
     }
-  } else if (req.body.stat == "fail") {
-    holidayFailEmail(startDate, endDate, "booking clash");
-    console.log("failed to book the holiday.");
-  } else {
-    console.log("Something else went wrong.");
+  } catch (error) {
+    console.error("Error in /bookholiday route:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-app.get("/getholidays", checkAuth, async (req, res) => {
+
+app.put("/updateholiday", checkAuth, async (req, res) => {
+
+  console.log("update holiday called");
+  try {
+    const { remaining } = req.body;
+    await pool.query("UPDATE employees SET annual_leave_remaining = $1 WHERE username = $2", [
+      remaining,
+      req.session.username,
+    ]);
+    res.json({ message: "Holiday allowance updated successfully" });
+  } catch (error) {
+    console.error("Error updating holiday allowance:", error);
+    res.status(500).json({ error: "Error updating holiday allowance" });
+  }
+});
+
+
+app.get("/getallholidays", checkAuth, async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM holidays");
+    console.log(result.rows);
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error getting holidays:", error);
+    res.status(500).json({ error: "Error getting holidays" });
+  }
+});
 
-    // If there are no holidays in the database, send a meaningful message
-    if (result.rowCount === 0) {
-      res.json({ message: "No holidays found" });
-      return;
-    }
-
+app.get("/getpersonalholidays", checkAuth, async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM holidays WHERE employee_id = $1",[req.session.userid]);
     console.log(result.rows);
     res.json(result.rows);
   } catch (error) {
@@ -603,23 +645,54 @@ app.get("/procurement", checkAuth, (req, res) => {
   res.sendFile(__dirname + "/public/procurement.html");
 });
 
+app.get("/api/employeename", checkAuth, async (req, res) => {
+  try {
+    const fnameResult = await pool.query("SELECT firstname FROM employees WHERE username = $1", [req.session.username]);
+    const lnameResult = await pool.query("SELECT lastname FROM employees WHERE username = $1", [req.session.username]);
+    
+    const fname = fnameResult.rows[0].firstname; // Assuming the first name is retrieved from the first row of the result
+    const lname = lnameResult.rows[0].lastname; // Assuming the last name is retrieved from the first row of the result
+
+    res.json(fname + " " + lname);
+  } catch (error) {
+    console.error("Error getting employee name:", error);
+    res.status(500).json({ error: "Error getting employee name" });
+  }
+});
+
+
+
 // GET endpoint to retrieve all procurement requests
 app.get("/api/procurements", async (req, res) => {
-  try {
-    const procurements = await pool.query(
-      "SELECT * FROM Procurement ORDER BY Date DESC"
-    );
-    res.json(procurements);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: "Internal server error" });
+  if (req.session.role == "manager" || req.session.role == "Manager") {
+    try {
+      const procurements = await pool.query(
+        "SELECT * FROM Procurement ORDER BY Date DESC"
+      );
+      res.json(procurements);
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  } else {
+    try {
+      const procurements = await pool.query(
+        "SELECT * FROM Procurement WHERE Requestedby = $1 ORDER BY Date DESC",
+        [req.session.username]
+      );
+      res.json(procurements);
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 });
 
 // POST endpoint to add a new procurement request
-app.post("/api/procurements", express.json(), async (req, res) => {
+app.post("/api/procurements", checkAuth, async (req, res) => {
   try {
-    const { Requestedby, Request } = req.body;
+    const Requestedby = req.user.username;
+    const Request = req.body.Request;
     await pool.query(
       "INSERT INTO Procurement (Requestedby, Request) VALUES ($1, $2)",
       [Requestedby, Request]
@@ -632,22 +705,22 @@ app.post("/api/procurements", express.json(), async (req, res) => {
 });
 
 // PUT endpoint to update status of a procurement request
-app.put("/api/procurements/:id", express.json(), async (req, res) => {
+app.put("/api/procurements/:id", checkManager, async (req, res) => {
   try {
     const { status } = req.body;
     const { id } = req.params;
     if (status !== "requested" && status !== "fulfilled") {
-      res.status(400).json({ message: "Invalid status"  +  status});
+      res.status(400).json({ message: "Invalid status" + status });
       return;
     }
     await pool.query("UPDATE Procurement SET status = $1 WHERE Id = $2", [
       status,
       id,
     ]);
-    res.json({ 
+    res.json({
       message: "Procurement request updated successfully",
-      status: "good"
-   });
+      status: "good",
+    });
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Internal server error" });

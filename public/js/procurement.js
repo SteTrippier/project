@@ -1,17 +1,19 @@
 document.addEventListener("DOMContentLoaded", () => {
   fetchProcurements();
 });
+document.addEventListener('DOMContentLoaded', checkUserStatus);
 
 document
   .getElementById("procurementForm")
   .addEventListener("submit", async function (event) {
     event.preventDefault();
-    var Requestedby = document.getElementById("Requestedby").value;
+
+    var Requestedby = await fetch("/api/user");
+    Requestedby = await Requestedby.json();
+    console.log("requested by " + Requestedby.username);
+
     var Request = document.getElementById("Request").value;
-    if (Requestedby === "") {
-      alert("Please enter your name");
-      return;
-    }
+
     if (Request === "") {
       alert("Please enter your request");
       return;
@@ -25,7 +27,6 @@ document
           Request: Request,
         }),
       });
-      console.log(result);
       alert("Procurement request submitted");
     } catch (err) {
       alert("Error submitting procurement request");
@@ -50,49 +51,72 @@ async function fetchProcurements() {
     }
 
     const procurements1 = await response.json();
-    let procurements = procurements1.rows;
-
-    // Sorting procurements array by status and date
-    procurements.sort((a, b) => {
-      if (a.status !== b.status) {
-        return a.status === "requested" ? -1 : 1;
-      }
-      return new Date(a.date) - new Date(b.date);
-    });
-
+    const procurements = procurements1.rows;
     console.log(procurements);
-
     // Ensure procurements is an array and it's not empty
     for (var i = 0; i < procurements.length; i++) {
-      const row = table.insertRow();
-      var date = new Date(procurements[i].date);
-      var formattedDate = date.toISOString().split("T")[0];
-      row.innerHTML = `
-                  <td>${procurements[i].id}</td>
-                  <td>${procurements[i].requestedby}</td>
-                  <td>${procurements[i].request}</td>
-                  <td>${formattedDate}</td>
-                  <td>${procurements[i].status}</td>
-                  <td>
-                      <select id="status-${
-                        procurements[i].id
-                      }" onchange="updateStatus(${procurements[i].id})">
-                          <option value="requested" ${
-                            procurements[i].status === "requested"
-                              ? "selected"
-                              : ""
-                          }>Requested</option>
-                          <option value="fulfilled" ${
-                            procurements[i].status === "fulfilled"
-                              ? "selected"
-                              : ""
-                          }>Fulfilled</option>    
-                      </select>
-                  </td>
-              `;
+      if (procurements[i].status === "fulfilled") {
+        const row = table.insertRow();
+        var date = new Date(procurements[i].date);
+        var formattedDate = date.toISOString().split("T")[0];
+        row.innerHTML = `
+                    <td>${procurements[i].id}</td>
+                    <td>${procurements[i].requestedby}</td>
+                    <td>${procurements[i].request}</td>
+                    <td>${formattedDate}</td>
+                    <td>${procurements[i].status}</td>
+                    <td id="noChange-${procurements[i].id}">
+                        <select id="status-${
+                          procurements[i].id
+                        }" onchange="updateStatus(${procurements[i].id})">
+                            <option value="requested" ${
+                              procurements[i].status === "requested"
+                                ? "selected"
+                                : ""
+                            }>Requested</option>
+                            <option value="fulfilled" ${
+                              procurements[i].status === "fulfilled"
+                                ? "selected"
+                                : ""
+                            }>Fulfilled</option>
+                        </select>
+                    </td>
+                `;
+      } else if (procurements[i].status === "requested") {
+        const row = table.insertRow();
+        var date = new Date(procurements[i].date);
+        var formattedDate = date.toISOString().split("T")[0];
+        row.innerHTML = `
+                    <td>${procurements[i].id}</td>
+                    <td>${procurements[i].requestedby}</td>
+                    <td>${procurements[i].request}</td>
+                    <td>${formattedDate}</td>
+                    <td>${procurements[i].status}</td>
+                    <td class="changeable">
+                        <select id="status-${
+                          procurements[i].id
+                        }" onchange="updateStatus(${procurements[i].id})">
+                            <option value="requested" ${
+                              procurements[i].status === "requested"
+                                ? "selected"
+                                : ""
+                            }>Requested</option>
+                            <option value="fulfilled" ${
+                              procurements[i].status === "fulfilled"
+                                ? "selected"
+                                : ""
+                            }>Fulfilled</option>    
+                        </select>
+                    </td>
+                `;
+      } else {
+        const row = table.insertRow();
+        row.innerHTML =
+          '<td colspan="6" style="text-align: center;">No procurements found</td>';
+      }
     }
   } catch (err) {
-    console.log(err);
+    console.error(err);
     const row = table.insertRow();
     row.innerHTML =
       '<td colspan="6" style="text-align: center;">Error fetching procurements</td>';
@@ -115,3 +139,29 @@ async function updateStatus(id) {
     console.error(err);
   }
 }
+
+async function checkUserStatus() {
+    try {
+      const response = await fetch('/api/user_role');
+      const data = await response.json();
+      console.log(data);
+  
+      if (!(data.role.toLowerCase() == "manager")) {
+        // If the user is not a manager, remove the "Update Status" column
+        var table = document.getElementById("procurementTable");
+        var columnIndex = 5; // Index of the "Update Status" column (zero-based)
+        var rows = table.getElementsByTagName("tr");
+        
+        for (var i = 0; i < rows.length; i++) {
+          var cells = rows[i].getElementsByTagName("td");
+          if (cells.length > columnIndex) {
+            // Remove the cell at columnIndex
+            cells[columnIndex].parentNode.removeChild(cells[columnIndex]);
+          }
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  
