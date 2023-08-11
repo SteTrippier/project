@@ -1,8 +1,5 @@
 <!-- todo: 
-  1. Create a calendar
-  2. Implement booking functionality
-  3. Show the user how many holidays they have left
-  4. Email confirmation of the holiday booking or rejection
+
   5. Show other department members holidays on the calendar <- potential functional requirement
   6. Raise a holiday dispute with manager <- potential functional requirement
 
@@ -29,39 +26,15 @@
       var myFullCalendar = FullCalendar;
     </script>
     <script src="js/holiday.js"></script>
+    <script src="js/nav-setup.js"></script>
     <title>Holidays</title>
   </head>
   <body>
-    <!---------------------------------- navigation bar ---------------------------------------->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <a class="navbar-brand" href="#">Harrisons Saw and tool</a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav mr-auto">
-          <li class="nav-item active">
-            <a class="nav-link" href="home.html">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="holiday.html">Holidays</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="machinefault.html">Fault reports</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" id="manager-link" href="management.html">Management area</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="procurement.html">Procurement Requests</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="logout">Log out</a>
-          </li>
-
-        </ul>
-      </div>
-    </nav>
+  <!---------------------------------- navigation bar ---------------------------------------->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light" id="main-nav-bar">
+    <!--moved navbar to nav-setup.js -->
+  </nav>
+<!---------------------------------- end of navigation bar --------------------------------->
     <!---------------------------------- Book a holiday ---------------------------------------->
     <div class="container">
       <h1 class="my-4">Book a holiday</h1>

@@ -70,7 +70,7 @@ var transporter = nodemailer.createTransport({
   },
   tls: {
     rejectUnauthorized: false,
-  }
+  },
 });
 
 // setup email data
@@ -132,28 +132,25 @@ function checkAuth(req, res, next) {
     console.log("checkAuth passed");
     next();
   } else {
-    console.log("checkAuth failed");
-    return res.redirect("/index.html");
+    res.writeHead(302, {
+      Location: "/index.html",
+    });
+    // End the response
+    res.end();
   }
 }
 
 // Check if the user is logged in as a manager before allowing access to the page.
 function checkManager(req, res, next) {
   console.log("checkManager called");
-  if (
-    req.session.loggedin &&
-    (req.session.role == "manager" || req.session.role == "Manager")
-  ) {
+  if (req.session.loggedin && (req.session.role == "manager" || req.session.role == "Manager")) {
     next();
   } else {
-    console.log(
-      "checkManager failed, unauthorised user: ",
-      req.session.loggedin,
-      req.session.role
-    );
-    res.status(403).json({
-      error: "Unauthorized",
+    res.writeHead(302, {
+      Location: "/unauthorized.html",
     });
+    // End the response
+    res.end();
   }
 }
 
@@ -547,7 +544,10 @@ app.post("/deleteholiday", checkAuth, async (req, res) => {
   console.log("holidayID:", holidayID);
   try {
     // First, check if a row with the given holidayID exists in the database
-    const result = await pool.query("SELECT number_of_days_used FROM holidays WHERE id = $1", [holidayID]);
+    const result = await pool.query(
+      "SELECT number_of_days_used FROM holidays WHERE id = $1",
+      [holidayID]
+    );
     console.log("result:", result);
     if (result.rowCount === 0) {
       res.status(404).json({ error: "Holiday not found" });
@@ -556,7 +556,10 @@ app.post("/deleteholiday", checkAuth, async (req, res) => {
     // If it exists, proceed with the deletion
     await pool.query("DELETE FROM holidays WHERE id = $1", [holidayID]);
     res.json({ message: "Holiday deleted successfully" });
-    await pool.query("Update employees SET annual_leave_remaining = annual_leave_remaining + $1 WHERE username = $2", [result.rows[0].number_of_days_used, req.session.username]);
+    await pool.query(
+      "Update employees SET annual_leave_remaining = annual_leave_remaining + $1 WHERE username = $2",
+      [result.rows[0].number_of_days_used, req.session.username]
+    );
   } catch (error) {
     console.error("Error deleting holiday:", error);
     res.status(500).json({ error: "Error deleting holiday" });
@@ -600,23 +603,20 @@ app.post("/bookholiday", checkAuth, async (req, res) => {
   }
 });
 
-
 app.put("/updateholiday", checkAuth, async (req, res) => {
-
   console.log("update holiday called");
   try {
     const { remaining } = req.body;
-    await pool.query("UPDATE employees SET annual_leave_remaining = $1 WHERE username = $2", [
-      remaining,
-      req.session.username,
-    ]);
+    await pool.query(
+      "UPDATE employees SET annual_leave_remaining = $1 WHERE username = $2",
+      [remaining, req.session.username]
+    );
     res.json({ message: "Holiday allowance updated successfully" });
   } catch (error) {
     console.error("Error updating holiday allowance:", error);
     res.status(500).json({ error: "Error updating holiday allowance" });
   }
 });
-
 
 app.get("/getallholidays", checkAuth, async (req, res) => {
   try {
@@ -631,7 +631,10 @@ app.get("/getallholidays", checkAuth, async (req, res) => {
 
 app.get("/getpersonalholidays", checkAuth, async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM holidays WHERE employee_id = $1",[req.session.userid]);
+    const result = await pool.query(
+      "SELECT * FROM holidays WHERE employee_id = $1",
+      [req.session.userid]
+    );
     console.log(result.rows);
     res.json(result.rows);
   } catch (error) {
@@ -647,9 +650,15 @@ app.get("/procurement", checkAuth, (req, res) => {
 
 app.get("/api/employeename", checkAuth, async (req, res) => {
   try {
-    const fnameResult = await pool.query("SELECT firstname FROM employees WHERE username = $1", [req.session.username]);
-    const lnameResult = await pool.query("SELECT lastname FROM employees WHERE username = $1", [req.session.username]);
-    
+    const fnameResult = await pool.query(
+      "SELECT firstname FROM employees WHERE username = $1",
+      [req.session.username]
+    );
+    const lnameResult = await pool.query(
+      "SELECT lastname FROM employees WHERE username = $1",
+      [req.session.username]
+    );
+
     const fname = fnameResult.rows[0].firstname; // Assuming the first name is retrieved from the first row of the result
     const lname = lnameResult.rows[0].lastname; // Assuming the last name is retrieved from the first row of the result
 
@@ -659,8 +668,6 @@ app.get("/api/employeename", checkAuth, async (req, res) => {
     res.status(500).json({ error: "Error getting employee name" });
   }
 });
-
-
 
 // GET endpoint to retrieve all procurement requests
 app.get("/api/procurements", async (req, res) => {
@@ -726,3 +733,52 @@ app.put("/api/procurements/:id", checkManager, async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+/////////////////////GET METHOD FOR EACH PAGE TO CHECK AUTH//////////////////////////
+app.get("/home", checkAuth, (req, res) => {
+  res.sendFile(__dirname + "/public/home.html");
+});
+app.get("/home.html", checkAuth, (req, res) => {
+  res.sendFile(__dirname + "/public/home.html");
+});
+
+
+app.get("/holiday", checkAuth, (req, res) => {
+  res.sendFile(__dirname + "/public/holiday.html");
+});
+app.get("/holiday.html", checkAuth, (req, res) => {
+  res.sendFile(__dirname + "/public/holiday.html");
+});
+
+
+app.get("/machinefault", checkAuth, (req, res) => {
+  res.sendFile(__dirname + "/public/machinefault.html");
+});
+app.get("/machinefault.html", checkAuth, (req, res) => {
+  res.sendFile(__dirname + "/public/machinefault.html");
+});
+
+
+app.get("/procurement", checkAuth, (req, res) => {
+  res.sendFile(__dirname + "/public/procurement.html");
+});
+app.get("/procurement.html", checkAuth, (req, res) => {
+  res.sendFile(__dirname + "/public/procurement.html");
+});
+
+
+app.get("/profile", checkAuth, (req, res) => {
+  res.sendFile(__dirname + "/public/profile.html");
+});
+app.get("/profile.html", checkAuth, (req, res) => {
+  res.sendFile(__dirname + "/public/profile.html");
+});
+
+
+app.get("/management", checkManager, (req, res) => {
+  res.sendFile(__dirname + "/public/management.html");
+});
+app.get("/management.html", checkManager, (req, res) => {
+  res.sendFile(__dirname + "/public/management.html");
+}
+);
