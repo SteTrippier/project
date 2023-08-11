@@ -29,12 +29,12 @@ app.use((req, res, next) => {
 });
 app.use(
   session({
-    secret: process.env.SESSION_KEY, // A random string used to sign the session ID cookie
+    secret: process.env.SESSION_KEY, 
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: false, // Set to true if you're using HTTPS
-      maxAge: 3600000, // Session expiration time (in milliseconds)
+      secure: false, 
+      maxAge: 3600000, //session time out after 1 hour
     },
   })
 );
@@ -306,6 +306,19 @@ app.post("/notices", checkManager, async (req, res) => {
   } catch (error) {
     console.error("Error adding notice:", error);
     res.status(500).json({ error: "Error adding notice" });
+  }
+});
+
+app.post("/deleteNotice", checkManager, async (req, res) => {
+  console.log("POST /deleteNotice called");
+  try {
+    console.log(req.body);
+    const { id } = req.body;
+    await pool.query("DELETE FROM notices WHERE id = $1", [id]);
+    res.json({ message: "Notice deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting notice:", error);
+    res.status(500).json({ error: "Error deleting notice" });
   }
 });
 
@@ -782,3 +795,6 @@ app.get("/management.html", checkManager, (req, res) => {
   res.sendFile(__dirname + "/public/management.html");
 }
 );
+
+
+
