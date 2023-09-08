@@ -1,3 +1,57 @@
+async function init() {
+  var noticeList = await fetch("/notices");
+  var noticeListJSON = await noticeList.json();
+  console.log(noticeListJSON);
+  
+  var isManager = await checkManager();
+  
+  for (var i = 0; i < noticeListJSON.length; i++) {
+      addNotice(
+          noticeListJSON[i].title,
+          noticeListJSON[i].description,
+          noticeListJSON[i].id,
+          isManager
+      );
+  }
+
+  if (isManager) {
+      var snippet = document.getElementById("add-a-notice");
+      snippet.innerHTML = `<h1 class="my-4">Submit a Notice</h1>
+          <form onsubmit="return false">
+              <div class="form-group">
+                  <label for="noticeTitle">Notice Title</label>
+                  <input type="text" class="form-control" id="noticeTitle" placeholder="Enter notice title">
+              </div>
+              <div class="form-group">
+                  <label for="noticeText">Notice Text</label>
+                  <textarea class="form-control" id="noticeText" rows="3" placeholder="Enter notice text"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary" id="submitNotice" disabled>Submit Notice</button>
+              <button type="button" class="btn btn-primary" id="clearForm" >Clear Form</button>
+          </form>
+      </div><br /><br />`;
+      document.getElementById("submitNotice").addEventListener("click", submitNotice);
+      document.getElementById("clearForm").addEventListener("click", clearForm);
+      document.getElementById("noticeTitle").addEventListener("change", updateButtonState);
+      document.getElementById("noticeText").addEventListener("change", updateButtonState);
+  }
+}
+
+function updateButtonState() {
+  const title = document.getElementById("noticeTitle").value;
+  const body = document.getElementById("noticeText").value;
+  
+  const submitBtn = document.getElementById("submitNotice");
+  
+  if (title.trim() === "" || body.trim() === "") {
+    // Disable the buttons
+    submitBtn.setAttribute("disabled", "disabled");
+  } else {
+    // Enable the buttons
+    submitBtn.removeAttribute("disabled");
+  }
+}
+
 function submitNotice() {
   var title = document.getElementById("noticeTitle").value;
   var body = document.getElementById("noticeText").value;
@@ -75,44 +129,7 @@ async function saveNotice() {
   }
 }
 
-async function init() {
-  var noticeList = await fetch("/notices");
-  var noticeListJSON = await noticeList.json();
-  console.log(noticeListJSON);
-  
-  var isManager = await checkManager();
-  
-  for (var i = 0; i < noticeListJSON.length; i++) {
-      addNotice(
-          noticeListJSON[i].title,
-          noticeListJSON[i].description,
-          noticeListJSON[i].id,
-          isManager
-      );
-  }
 
-  if (isManager) {
-      var snippet = document.getElementById("add-a-notice");
-      snippet.innerHTML = `<h1 class="my-4">Submit a Notice</h1>
-          <form onsubmit="return false">
-              <div class="form-group">
-                  <label for="noticeTitle">Notice Title</label>
-                  <input type="text" class="form-control" id="noticeTitle" placeholder="Enter notice title">
-              </div>
-              <div class="form-group">
-                  <label for="noticeText">Notice Text</label>
-                  <textarea class="form-control" id="noticeText" rows="3" placeholder="Enter notice text"></textarea>
-              </div>
-              <button type="submit" class="btn btn-primary" id="submitNotice">Submit Notice</button>
-              <button type="button" class="btn btn-primary" id="clearForm">Clear Form</button>
-          </form>
-      </div><br /><br />`;
-      document
-          .getElementById("submitNotice")
-          .addEventListener("click", submitNotice);
-      document.getElementById("clearForm").addEventListener("click", clearForm);
-  }
-}
 
 function clearForm() {
   document.getElementById("noticeTitle").value = "";

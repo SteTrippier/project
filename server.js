@@ -27,17 +27,19 @@ app.use((req, res, next) => {
   //console.log("Cookies:", req.cookies); // This will log the cookies in the server console
   next();
 });
+
 app.use(
   session({
-    secret: process.env.SESSION_KEY, 
-    resave: false,
-    saveUninitialized: true,
+    secret: process.env.SESSION_KEY,  // Set sekret key to be used when signing the session ID cookie
+    resave: false,  // Don't save session if unmodified
+    saveUninitialized: false,  // Don't create session until something stored
     cookie: {
-      secure: false, 
-      maxAge: 3600000, //session time out after 1 hour
+      secure: false,  // Allow the cookie to be sent over non-secure (HTTP) connections
+      maxAge: 3600000,  // Set the maximum age (in milliseconds) for the session cookie (1 hour)
     },
   })
 );
+
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -51,15 +53,14 @@ app.listen(port, () =>
 const fs = require("fs");
 // Load self-signed certificate
 const ca = fs.readFileSync("server.crt");
-
-// auto email confirmation
-var nodemailer = require("nodemailer");
 const { start } = require("repl");
+
+// setup email transporter for auto email confirmation
+var nodemailer = require("nodemailer");
 var senderEmail = process.env.EMAIL_ADD;
 var senderPass = process.env.EMAIL_PASS;
 var receiverEmail = process.env.TEST_EMAIL;
 
-// create reusable transporter object using the default SMTP transport
 var transporter = nodemailer.createTransport({
   host: "smtp.zoho.eu",
   port: 465,
@@ -128,6 +129,7 @@ function holidaySuccessEmail(start, end) {
 
 // Check if the user is logged in before allowing access to the page.
 function checkAuth(req, res, next) {
+  console.log("checkAuth called");
   if (req.session.loggedin) {
     console.log("checkAuth passed");
     next();
@@ -135,7 +137,7 @@ function checkAuth(req, res, next) {
     res.writeHead(302, {
       Location: "/index.html",
     });
-    // End the response
+    console.log("checkAuth failed");
     res.end();
   }
 }
@@ -144,61 +146,17 @@ function checkAuth(req, res, next) {
 function checkManager(req, res, next) {
   console.log("checkManager called");
   if (req.session.loggedin && (req.session.role == "manager" || req.session.role == "Manager")) {
+    console.log("checkManager passed");
     next();
-  } else {
+  } 
+  else {
     res.writeHead(302, {
       Location: "/unauthorized.html",
     });
-    // End the response
+    console.log("checkManager failed");
     res.end();
   }
 }
-
-app.post("/updateHolidayAllowance", checkManager, async (req, res) => {
-  try {
-    const { username, holidayAllowance } = req.body;
-    await pool.query(
-      "UPDATE employees SET annual_leave_remaining = $1 WHERE username = $2",
-      [holidayAllowance, username]
-    );
-    res.json({ message: "Holiday allowance updated successfully" });
-    console.log(
-      "username: " +
-        username +
-        " holidayAllowance: " +
-        holidayAllowance +
-        " updated successfully"
-    );
-  } catch (error) {
-    console.error("Error updating holiday allowance:", error);
-    res.status(500).json({ error: "Error updating holiday allowance" });
-  }
-});
-
-//get a list of all employees first name and last name
-app.get("/getAllEmployeesNameAndUsername", checkAuth, async (req, res) => {
-  try {
-    const query =
-      "SELECT firstname, lastname, username, annual_leave_remaining from employees";
-    const result = await pool.query(query);
-    res.status(200).json(result.rows);
-  } catch (error) {
-    console.error("Error retrieving employees:", error);
-    res.status(500).json({ error: "Error retrieving employees" });
-  }
-});
-
-app.get("/getAllEmployees", checkAuth, async (req, res) => {
-  try {
-    const query = "SELECT * from employees";
-    const result = await pool.query(query);
-    res.status(200).json(result.rows);
-  } catch (error) {
-    console.error("Error retrieving employees:", error);
-    res.status(500).json({ error: "Error retrieving employees" });
-  }
-});
-
 passport.use(
   new LocalStrategy(async function (username, password, done) {
     try {
@@ -253,6 +211,68 @@ passport.deserializeUser(async (user, done) => {
   done(null, fullUser);
 });
 
+app.post("/updateHolidayAllowance", checkManager, async (req, res) => {
+  try {
+    const { username, holidayAllowance } = req.body;
+
+    if (holidayAllowance < 0) {
+      res.status(400).json({ error: "Holiday allowance cannot be negative" });
+      return;
+    } else if (holidayAllowance > 50) {
+      res
+        .status(400)
+        .json({ error: "Holiday allowance cannot be greater than 50" });
+      return;
+    }
+
+    await pool.query(
+      "UPDATE employees SET annual_leave_remaining = $1 WHERE username = $2",
+      [holidayAllowance, username]
+    );
+    res.json({
+      message:
+        "Holiday allowance for user: " +
+        username +
+        " successfully updated to: " +
+        holidayAllowance,
+    });
+
+    console.log(
+      "username: " +
+        username +
+        " holidayAllowance: " +
+        holidayAllowance +
+        " updated successfully"
+    );
+  } catch (error) {
+    console.error("Error updating holiday allowance:", error);
+    res.status(500).json({ error: "Error updating holiday allowance" });
+  }
+});
+
+app.get("/getAllEmployeesNameAndUsername", checkAuth, async (req, res) => {
+  try {
+    const query =
+      "SELECT firstname, lastname, username, annual_leave_remaining from employees";
+    const result = await pool.query(query);
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error("Error retrieving employees:", error);
+    res.status(500).json({ error: "Error retrieving employees" });
+  }
+});
+
+app.get("/getAllEmployees", checkAuth, async (req, res) => {
+  try {
+    const query = "SELECT * from employees";
+    const result = await pool.query(query);
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error("Error retrieving employees:", error);
+    res.status(500).json({ error: "Error retrieving employees" });
+  }
+});
+
 app.get("/", checkAuth, (req, res) => {
   res.status(200).send(__dirname + "/public/home.html");
 });
@@ -273,8 +293,6 @@ app.get("/users", checkAuth, async (req, res) => {
   }
 });
 
-// NOTICES API
-// Define a route to handle GET requests to retrieve the notices
 app.get("/notices", checkAuth, async (req, res) => {
   console.log("GET /notices called");
   try {
@@ -287,7 +305,7 @@ app.get("/notices", checkAuth, async (req, res) => {
     res.status(500).json({ error: "Error retrieving notices" });
   }
 });
-// Define a route to handle POST requests to add a new notice
+
 app.post("/notices", checkManager, async (req, res) => {
   console.log("POST /notices called");
   try {
@@ -322,7 +340,6 @@ app.post("/deleteNotice", checkManager, async (req, res) => {
   }
 });
 
-// remove user API
 app.post("/removeuser", checkManager, async (req, res) => {
   // delete user from the database
   // end any sessions for that user
@@ -355,8 +372,6 @@ app.post("/removeuser", checkManager, async (req, res) => {
   }
 });
 
-// LOG IN AND SIGN UP API
-//send login page
 app.get("/login", (req, res) => {
   res.sendFile(__dirname + "/public/index.html");
 });
@@ -397,12 +412,16 @@ app.get("/api/user_role", checkAuth, (req, res) => {
   console.log("GET /api/user_role called");
   console.log(req.user);
   if (req.user === undefined) {
-    // The user is not logged in
-    res.json({});
+    res.json({
+      role: "none",
+    });
+    res.writeHead(302, {
+      Location: "/index.html",
+    });
+    res.end();
   } else {
     res.json({
-      role: req.user.role,
-      // other details can be added here as necessary
+      role: req.user.role, // get role from user object
     });
   }
 });
@@ -656,7 +675,6 @@ app.get("/getpersonalholidays", checkAuth, async (req, res) => {
   }
 });
 
-/////////////////////PROCUREMENT API//////////////////////////
 app.get("/procurement", checkAuth, (req, res) => {
   res.sendFile(__dirname + "/public/procurement.html");
 });
@@ -682,7 +700,6 @@ app.get("/api/employeename", checkAuth, async (req, res) => {
   }
 });
 
-// GET endpoint to retrieve all procurement requests
 app.get("/api/procurements", async (req, res) => {
   if (req.session.role == "manager" || req.session.role == "Manager") {
     try {
@@ -708,7 +725,6 @@ app.get("/api/procurements", async (req, res) => {
   }
 });
 
-// POST endpoint to add a new procurement request
 app.post("/api/procurements", checkAuth, async (req, res) => {
   try {
     const Requestedby = req.user.username;
@@ -724,7 +740,6 @@ app.post("/api/procurements", checkAuth, async (req, res) => {
   }
 });
 
-// PUT endpoint to update status of a procurement request
 app.put("/api/procurements/:id", checkManager, async (req, res) => {
   try {
     const { status } = req.body;
@@ -747,14 +762,12 @@ app.put("/api/procurements/:id", checkManager, async (req, res) => {
   }
 });
 
-/////////////////////GET METHOD FOR EACH PAGE TO CHECK AUTH//////////////////////////
 app.get("/home", checkAuth, (req, res) => {
   res.sendFile(__dirname + "/public/home.html");
 });
 app.get("/home.html", checkAuth, (req, res) => {
   res.sendFile(__dirname + "/public/home.html");
 });
-
 
 app.get("/holiday", checkAuth, (req, res) => {
   res.sendFile(__dirname + "/public/holiday.html");
@@ -763,14 +776,12 @@ app.get("/holiday.html", checkAuth, (req, res) => {
   res.sendFile(__dirname + "/public/holiday.html");
 });
 
-
 app.get("/machinefault", checkAuth, (req, res) => {
   res.sendFile(__dirname + "/public/machinefault.html");
 });
 app.get("/machinefault.html", checkAuth, (req, res) => {
   res.sendFile(__dirname + "/public/machinefault.html");
 });
-
 
 app.get("/procurement", checkAuth, (req, res) => {
   res.sendFile(__dirname + "/public/procurement.html");
@@ -779,7 +790,6 @@ app.get("/procurement.html", checkAuth, (req, res) => {
   res.sendFile(__dirname + "/public/procurement.html");
 });
 
-
 app.get("/profile", checkAuth, (req, res) => {
   res.sendFile(__dirname + "/public/profile.html");
 });
@@ -787,14 +797,70 @@ app.get("/profile.html", checkAuth, (req, res) => {
   res.sendFile(__dirname + "/public/profile.html");
 });
 
-
 app.get("/management", checkManager, (req, res) => {
   res.sendFile(__dirname + "/public/management.html");
 });
 app.get("/management.html", checkManager, (req, res) => {
   res.sendFile(__dirname + "/public/management.html");
-}
-);
+});
 
+app.get("/userinfonotice", checkAuth, (req, res) => {
+  res.sendFile(__dirname + "/public/userinfonotice.html");
+});
+app.get("/userinfonotice.html", checkAuth, (req, res) => {
+  res.sendFile(__dirname + "/public/userinfonotice.html");
+});
 
+app.post("/api/addMachine", async (req, res) => {
+  const { name, location, type, average_time_mins } = req.body;
+  const status = "active";
+  try {
+    const result = await pool.query(
+      "INSERT INTO machines (name, location, status, type, average_time_mins) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+      [name, location, status, type, average_time_mins]
+    );
+    res.json({ id: result.rows[0].id });
+  } catch (err) {
+    res.status(500).json({ error: "Database error" });
+  }
+});
 
+app.get("/api/getMachines", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM machines");
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.delete("/api/deleteMachine/:id", async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    await pool.query("DELETE FROM machines WHERE id = $1", [id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.put("/api/updateStatus/:id", async (req, res) => {
+  const id = req.params.id;
+  const { status } = req.body;
+
+  if (status === "active" || status === "inactive") {
+    try {
+      await pool.query("UPDATE machines SET status = $1 WHERE id = $2", [
+        status,
+        id,
+      ]);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Database error:", err);
+      res.status(500).json({ error: "Database error" });
+    }
+  } else {
+    res.status(400).json({ error: "Invalid status value" });
+  }
+});

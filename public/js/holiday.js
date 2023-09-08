@@ -15,7 +15,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
-
 // test function. called on page load
 function holidayInit() {
   document
@@ -27,7 +26,30 @@ function holidayInit() {
       var comment = document.getElementById("comment").value;
       bookHoliday(startDate, endDate, comment);
     });
+    const startDateInput = document.getElementById("start-date");
+    const endDateInput = document.getElementById("end-date");
+    const bookHolidayButton = document.getElementById("bookHolidayButton");
+    
+    // Function to check the input fields and disable or enable the button
+    function checkInputs() {
+        if (!startDateInput.value || !endDateInput.value) {
+            bookHolidayButton.disabled = true;
+        } else {
+            bookHolidayButton.disabled = false;
+        }
+    }
+
+    // Initial check
+    checkInputs();
+    
+    // Add event listeners to input fields
+    startDateInput.addEventListener("input", checkInputs);
+    endDateInput.addEventListener("input", checkInputs);
+
+
 }
+
+
 async function getRemainingHolidays() {
   const response = await fetch("/api/remaining_holiday");
   const remainingHoliday = await response.json(); // Assuming the API returns JSON data
@@ -65,6 +87,7 @@ async function isHolidayOverlap(startDatei, endDatei) {
   return false;
 }
 
+
 async function hasEnoughRemainingHoliday(startDatei, endDatei) {
   count = 0;
   const response = await fetch("/api/remaining_holiday");
@@ -98,9 +121,7 @@ async function hasEnoughRemainingHoliday(startDatei, endDatei) {
       count++;
     }
   }
-
   console.log("Working Days Count:", count);
-
   if (count <= remainingHoliday) {
     console.log("Has Enough Remaining Holiday: true");
     return remainingHoliday-count;
@@ -109,6 +130,7 @@ async function hasEnoughRemainingHoliday(startDatei, endDatei) {
     return -1;
   }
 }
+
 
 // checks if the requested holiday is valid
 async function bookHoliday(startDate, endDate, comment) {
@@ -179,6 +201,7 @@ async function bookHoliday(startDate, endDate, comment) {
   }
 }
 
+
 async function getPersonalHolidaysList() {
   let name = await fetch("/api/employeename");
   name = await name.json();
@@ -224,12 +247,14 @@ async function getPersonalHolidaysList() {
   }
 }
 
+
 async function getAllHolidayList() {
   let holidays = await fetch("/getallholidays");
   holidays = await holidays.json();
   console.log(holidays);
   return holidays;
 }
+
 
 async function cancelHoliday(id) {
   console.log(id);
@@ -253,10 +278,6 @@ async function cancelHoliday(id) {
     getRemainingHolidays();
   }
 }
-
-
-
-
 
 
 // Function to add an event to the calendar

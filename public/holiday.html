@@ -21,7 +21,7 @@
       integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
       crossorigin="anonymous"
     />
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <script>
       var myFullCalendar = FullCalendar;
     </script>
@@ -30,39 +30,52 @@
     <title>Holidays</title>
   </head>
   <body>
-  <!---------------------------------- navigation bar ---------------------------------------->
-  <nav class="navbar navbar-expand-lg navbar-light bg-light" id="main-nav-bar">
-    <!--moved navbar to nav-setup.js -->
-  </nav>
-<!---------------------------------- end of navigation bar --------------------------------->
+    <!---------------------------------- navigation bar ---------------------------------------->
+    <nav
+      class="navbar navbar-expand-lg navbar-light bg-light"
+      id="main-nav-bar"
+    >
+      <!--moved navbar to nav-setup.js -->
+    </nav>
+    <!---------------------------------- end of navigation bar --------------------------------->
     <!---------------------------------- Book a holiday ---------------------------------------->
     <div class="container">
       <h1 class="my-4">Book a holiday</h1>
       <div class="container" id="calendar"></div>
-      <p><b>
-        You have <span id="holidays-remaining">0</span> holidays remaining for
-        this year.
-      </b></p>
+      <p>
+        <b>
+          You have <span id="holidays-remaining">0</span> holidays remaining for
+          this year.
+        </b>
+      </p>
 
       <form id="holidayForm">
-        <div class="form-group">
-          <label for="start-date">Start date</label>
-          <input
-            type="date"
-            class="form-control"
-            id="start-date"
-            name="start-date"
-            placeholder=""
-          />
-          <label for="end-date">End date</label>
-          <input
-            type="date"
-            class="form-control"
-            id="end-date"
-            name="end-date"
-            placeholder=""
-          />
+        <div class="form-row">
+          <!-- Added this wrapper for the grid system -->
+          <div class="form-group col-md-6">
+            <!-- Make it take up half the width on medium and larger screens -->
+            <label for="start-date">Start date</label>
+            <input
+              type="date"
+              class="form-control"
+              id="start-date"
+              name="start-date"
+              placeholder=""
+            />
+          </div>
+          <div class="form-group col-md-6">
+            <!-- Make it take up half the width on medium and larger screens -->
+            <label for="end-date">End date</label>
+            <input
+              type="date"
+              class="form-control"
+              id="end-date"
+              name="end-date"
+              placeholder=""
+            />
+          </div>
         </div>
+
         <div class="form-group">
           <label for="comment">Comment (Optional): </label>
           <input
@@ -72,7 +85,7 @@
             placeholder="Enter comment here..."
           />
         </div>
-        <button type="submit" class="btn btn-primary">Book holiday</button>
+        <button type="submit" class="btn btn-primary" id="bookHolidayButton">Book holiday</button>
       </form>
     </div>
     <!---------------------------------- Cancel a holiday ---------------------------------------->
@@ -95,9 +108,7 @@
               <th scope="col">Action</th>
             </tr>
           </thead>
-          <tbody id = "cancelHolidayTableBody">
-            
-          </tbody>
+          <tbody id="cancelHolidayTableBody"></tbody>
         </table>
       </div>
     </div>

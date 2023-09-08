@@ -3,7 +3,7 @@ function checkLogin() {
     var password = document.getElementById("pwd").value;
     
     if (empId == "" || password == "") {
-      alert("Login Failed, please enter an employee ID and password.");
+      alert("Please enter your username and password to continue.");
     } 
     else {
       var user = {
